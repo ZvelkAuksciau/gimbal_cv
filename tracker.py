@@ -22,7 +22,7 @@ OPENCV_OBJECT_TRACKERS = {
     "mosse": cv2.TrackerMOSSE_create
 }
 
-tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
+tracker = OPENCV_OBJECT_TRACKERS[args["tracker"].lower()]()
 
 ROI = None
 
