@@ -13,8 +13,8 @@ ap.add_argument("-t", "--tracker", type=str, default="kcf",
 args = vars(ap.parse_args())
 
 OPENCV_OBJECT_TRACKERS = {
-    "csrt": cv2.TrackerCSRT_create,
     "kcf": cv2.TrackerKCF_create,
+    "csrt": cv2.TrackerCSRT_create,
     "boosting": cv2.TrackerBoosting_create,
     "mil": cv2.TrackerMIL_create,
     "tld": cv2.TrackerTLD_create,
@@ -34,6 +34,11 @@ else:
     vs = cv2.VideoCapture(args["video"])
 
 fps = None
+
+print("[INFO] press 'a' to select ROI in the center")
+print("[INFO] press 's' to select ROI with the mouse")
+print("[INFO] press 'c' to clear ROI")
+print("[INFO] press 'q' to quit")
 
 while True:
     frame = vs.read()
@@ -56,32 +61,33 @@ while True:
                           (0, 255, 0), 2)
             cv2.circle(frame, (int(x + w / 2), int(y + h / 2)),
                        2, (0, 255, 0), -1)
+        else:
+            crosshair = cv2.rectangle(frame, (int(
+            W / 2 - 50), int(H / 2 - 50)), (int(W / 2 + 50), int(H / 2 + 50)), (0, 0, 255), 2)
 
         fps.update()
         fps.stop()
 
         info = [
-            ("Tracker", args["tracker"]),
-            ("Success", "Yes" if success else "No"),
-            ("FPS", "{:.2f}".format(fps.fps())),
+            ("Tracker", args["tracker"], (255,0,0)),
+            ("Success", "Yes" if success else "No", (0,255,0) if success else (0,0,255)),
+            ("FPS", "{:.2f}".format(fps.fps()), (255,0,0)),
         ]
 
-        for (i, (k, v)) in enumerate(info):
-            text = "{}: {}".format(k, v)
-            cv2.putText(frame, text, (10, H - ((i * 20) + 20)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        for (index, (key, value, color)) in enumerate(info):
+            text = "{}: {}".format(key, value)
+            cv2.putText(frame, text, (10, H - ((index * 20) + 20)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
     if key == ord("a"):
         ROI = (W / 2 - 50, H / 2 - 50, 100, 100)
-        tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
         tracker.init(frame, ROI)
         fps = FPS().start()
     elif key == ord("s"):
         ROI = cv2.selectROI(
             "Frame", frame, fromCenter=False, showCrosshair=False)
-        tracker = OPENCV_OBJECT_TRACKERS[args["tracker"]]()
         tracker.init(frame, ROI)
         fps = FPS().start()
     elif key == ord("c"):
